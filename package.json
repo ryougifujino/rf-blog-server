@@ -1,0 +1,25 @@
+{
+  "name": "rf-blog-server",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ryougifujino/rf-blog-server.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ryougifujino/rf-blog-server/issues"
+  },
+  "homepage": "https://github.com/ryougifujino/rf-blog-server#readme",
+  "dependencies": {
+    "koa": "^2.7.0",
+    "openrecord": "^2.9.2",
+    "sqlite3": "^4.0.6"
+  }
+}
