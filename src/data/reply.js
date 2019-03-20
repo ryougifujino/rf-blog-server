@@ -9,5 +9,7 @@ module.exports = class Reply extends Store.BaseModel {
         // this.attribute('created_on', 'datetime');
 
         this.belongsTo('comment', {model: 'Comment', from: 'comment_id', to: 'id'});
+
+        this.convertOutput('created_on', value => new Date(value), false);
     }
 };

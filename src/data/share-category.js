@@ -7,5 +7,7 @@ module.exports = class ShareCategory extends Store.BaseModel {
         // this.attribute('created_on', 'datetime');
 
         this.hasMany('shares', {model: 'Share', from: 'id', to: 'share_category_id'});
+
+        this.convertOutput('created_on', value => new Date(value), false);
     }
 };

@@ -13,5 +13,7 @@ module.exports = class Share extends Store.BaseModel {
             from: 'share_category_id',
             to: 'id'
         });
+
+        this.convertOutput('created_on', value => new Date(value), false);
     }
 };

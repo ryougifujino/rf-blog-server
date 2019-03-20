@@ -13,5 +13,9 @@ module.exports = class Post extends Store.BaseModel {
         this.hasMany('comments', {model: 'Comment', from: 'id', to: 'post_id'});
         this.hasMany('post_tags', {model: 'PostTag', from: 'id', to: 'post_id'});
         this.hasMany('tags', {model: 'Tag', through: 'post_tags'});
+
+        this.convertOutput('private', value => Boolean(value), false);
+        this.convertInput('private', value => value ? 1 : 0, false);
+        this.convertOutput('created_on', value => new Date(value), false);
     }
 };
