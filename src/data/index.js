@@ -25,7 +25,6 @@ const store = new Store({
 models.forEach(model => store.Model(model));
 
 async function openDB() {
-    await store.connect();
     await store.ready();
     console.log('database connected');
 }
