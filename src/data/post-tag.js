@@ -3,6 +3,7 @@ const Store = require('openrecord/store/sqlite3');
 module.exports = class PostTag extends Store.BaseModel {
     static definition() {
         this.tableName = 'post_tag';
+        this.attribute('id', 'integer', {primary: true});
         // this.attribute('post_id', 'integer');
         // this.attribute('tag_id', 'integer');
 
