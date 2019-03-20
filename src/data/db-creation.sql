@@ -30,7 +30,7 @@ create table posts
   title      text    not null,
   body       text    not null,
   private    integer not null,
-  album_id   integer not null,
+  album_id   integer,
   created_on text    not null,
   primary key (id)
 );
