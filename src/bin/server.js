@@ -1,3 +1,9 @@
 const app = require('../lib/app');
+const db = require('../data');
 
-app.listen(3000);
+async function main() {
+    await db.openDB();
+    app.listen(3000);
+}
+
+main();
