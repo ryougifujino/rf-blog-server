@@ -1,4 +1,6 @@
 const Store = require('openrecord/store/sqlite3');
+const {DB_PATH} = require('../config');
+const dbCreator = require('./db-creator');
 
 const Album = require('./album');
 const Comment = require('./comment');
@@ -11,9 +13,12 @@ const Tag = require('./tag');
 
 const models = [Album, Comment, Post, PostTag, Reply, Share, ShareCategory, Tag];
 
+// try to create db
+dbCreator();
+
 const store = new Store({
     type: 'sqlite3',
-    file: __dirname + '/rf-blog.sqlite3',
+    file: DB_PATH,
     autoLoad: true
 });
 
