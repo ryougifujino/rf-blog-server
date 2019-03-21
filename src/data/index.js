@@ -19,7 +19,10 @@ dbCreator();
 const store = new Store({
     type: 'sqlite3',
     file: DB_PATH,
-    autoLoad: true
+    autoLoad: true,
+    inflection: {
+        post_tags: "post_tag"
+    }
 });
 
 models.forEach(model => store.Model(model));
