@@ -26,12 +26,12 @@ create table post_tag
 
 create table posts
 (
-  id         integer,
-  title      text    not null,
-  body       text    not null,
-  private    integer not null,
-  album_id   integer,
-  created_on text    not null,
+  id            integer,
+  title         text    not null,
+  body          text    not null,
+  is_private    integer not null,
+  album_id      integer,
+  created_on    text    not null,
   primary key (id)
 );
 
