@@ -1,4 +1,5 @@
 const {Post, PostTag, Tag} = require('../data');
+const DateUtils = require('../lib/date-utils');
 
 const POST_PREVIEW_LENGTH = 500;
 
@@ -19,12 +20,13 @@ async function filterTagIdsNotExist(tagIds) {
 
 const post = async ctx => {
     try {
-        const {post: {title, body, is_private, album_id, tag_ids}} = ctx.request.body;
+        const {post: {title, body, is_private, album_id, tag_ids} = {}} = ctx.request.body;
         const post = await Post.create({
             title,
             body,
             is_private,
-            album_id
+            album_id,
+            created_on: DateUtils.nowUtcDateTimeString()
         });
         if (tag_ids && Array.isArray(tag_ids)) {
             const tagIdsToSave = await filterTagIdsNotExist(tag_ids);
@@ -46,7 +48,8 @@ const post = async ctx => {
     }
 };
 
+
 module.exports = {
     get,
-    post
+    post,
 };

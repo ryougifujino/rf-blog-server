@@ -27,6 +27,19 @@ const utcStringToLocal = utcString => {
         padNumber(ld.getDate(), 2) + localTimePart;
 };
 
+/** get utc datetime string, example: 2019-03-22 16:07:22 */
+const nowUtcDateTimeString = () => {
+    const utc = new Date();
+    return utc.getUTCFullYear() + '-' +
+        padNumber(utc.getUTCMonth() + 1, 2) + '-' +
+        padNumber(utc.getUTCDate(), 2) + ' ' +
+        padNumber(utc.getUTCHours(), 2) + ':' +
+        padNumber(utc.getUTCMinutes(), 2) + ':' +
+        padNumber(utc.getUTCSeconds(), 2);
+
+};
+
 module.exports = {
-    utcStringToLocal
+    utcStringToLocal,
+    nowUtcDateTimeString
 };

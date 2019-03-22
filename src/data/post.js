@@ -17,10 +17,5 @@ module.exports = class Post extends Store.BaseModel {
         this.convertOutput('is_private', value => Boolean(value), false);
         this.convertInput('is_private', value => value ? 1 : 0, false);
         this.convertOutput('created_on', value => value, false);
-        // We set `created_on` with default value using date related function in `db-creation.sql`,
-        // but `openrecord` considers the function call as string, so we must overwrite the string
-        // with `null` in order to get generated timestamps. Meanwhile, `not null` after `created_on`
-        // should be removed in `create table` sql.
-        this.convertInput('created_on', () => null, false);
     }
 };

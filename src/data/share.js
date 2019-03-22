@@ -15,6 +15,5 @@ module.exports = class Share extends Store.BaseModel {
         });
 
         this.convertOutput('created_on', value => value, false);
-        this.convertInput('created_on', () => null, false);
     }
 };

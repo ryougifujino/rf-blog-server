@@ -9,6 +9,5 @@ module.exports = class Album extends Store.BaseModel {
         this.hasMany('posts', {model: 'Post', from: 'id', to: 'album_id'});
 
         this.convertOutput('created_on', value => value, false);
-        this.convertInput('created_on', () => null, false);
     }
 };

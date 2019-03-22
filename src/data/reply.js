@@ -11,6 +11,5 @@ module.exports = class Reply extends Store.BaseModel {
         this.belongsTo('comment', {model: 'Comment', from: 'comment_id', to: 'id'});
 
         this.convertOutput('created_on', value => value, false);
-        this.convertInput('created_on', () => null, false);
     }
 };

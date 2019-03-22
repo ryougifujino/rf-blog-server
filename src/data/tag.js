@@ -10,6 +10,5 @@ module.exports = class Tag extends Store.BaseModel {
         this.hasMany('posts', {model: 'Post', through: 'tag_posts'});
 
         this.convertOutput('created_on', value => value, false);
-        this.convertInput('created_on', () => null, false);
     }
 };
