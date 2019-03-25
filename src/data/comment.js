@@ -11,6 +11,6 @@ module.exports = class Comment extends Store.BaseModel {
         this.hasMany('replies', {model: 'Reply', from: 'id', to: 'comment_id'});
         this.belongsTo('comment', {model: 'Comment', from: 'post_id', to: 'id'});
 
-        this.convertOutput('created_on', value => new Date(value), false);
+        this.convertOutput('created_on', value => value, false);
     }
 };

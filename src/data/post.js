@@ -5,7 +5,7 @@ module.exports = class Post extends Store.BaseModel {
         this.attribute('id', 'integer', {primary: true});
         // this.attribute('title', 'string');
         // this.attribute('body', 'string');
-        // this.attribute('private', 'boolean');
+        // this.attribute('is_private', 'boolean');
         // this.attribute('album_id', 'integer');
         // this.attribute('created_on', 'datetime');
 
@@ -14,8 +14,8 @@ module.exports = class Post extends Store.BaseModel {
         this.hasMany('post_tags', {model: 'PostTag', from: 'id', to: 'post_id'});
         this.hasMany('tags', {model: 'Tag', through: 'post_tags'});
 
-        this.convertOutput('private', value => Boolean(value), false);
-        this.convertInput('private', value => value ? 1 : 0, false);
-        this.convertOutput('created_on', value => new Date(value), false);
+        this.convertOutput('is_private', value => Boolean(value), false);
+        this.convertInput('is_private', value => value ? 1 : 0, false);
+        this.convertOutput('created_on', value => value, false);
     }
 };
