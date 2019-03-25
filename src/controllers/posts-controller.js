@@ -22,13 +22,13 @@ async function filterTagIdsNotExist(tagIds) {
 const post = async ctx => {
     try {
         const {post: {title, body, is_private, album_id, tag_ids} = {}} = ctx.request.body;
-        const post = await Post.create({
+        const post = (await Post.create({
             title,
             body,
             is_private,
             album_id,
             created_on: DateUtils.nowUtcDateTimeString()
-        });
+        })).toJson();
         if (tag_ids && Array.isArray(tag_ids)) {
             const tagIdsToSave = await filterTagIdsNotExist(tag_ids);
 
@@ -41,8 +41,10 @@ const post = async ctx => {
 
             const postTagsToSave = tagIdsToSave.map(tagId => ({post_id: post.id, tag_id: tagId}));
             await PostTag.create(postTagsToSave);
+            post.tags_id = tagIdsToSave;
         }
-        ctx.body = {message: "success"};
+        ctx.status = 201;
+        ctx.body = post;
     } catch (e) {
         ctx.status = 400;
         ctx.body = {message: "params error", errors: e.toString().split('\n')};
@@ -79,7 +81,7 @@ const patch = async ctx => {
             const tagsToAdd = tagToAddIds.map(id => ({post_id: postId, tag_id: id}));
             tagsToAdd.length > 0 && await PostTag.create(tagsToAdd);
         }
-        ctx.body = {message: "success"};
+        ctx.status = 204;
     } catch (e) {
         console.error(e);
         ctx.status = 400;
