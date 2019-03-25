@@ -58,7 +58,7 @@ create table shares
   id                integer,
   title             text     not null,
   url               text     not null,
-  share_category_id integer  not null,
+  share_category_id integer,
   created_on        datetime not null,
   primary key (id)
 );
