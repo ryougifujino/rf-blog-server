@@ -1,4 +1,5 @@
 const {Post, PostTag, Tag} = require('../data');
+const {ErrorMessages, Pagination} = require('../data/body-templates');
 const DateUtils = require('../lib/date-utils');
 const SetUtils = require('../lib/set-utils');
 
@@ -6,9 +7,9 @@ const POST_PREVIEW_LENGTH = 500;
 
 const get = async ctx => {
     const {offset, limit} = ctx.query;
-    const posts = await Post.limit(limit, offset).order('created_on', true);
+    const posts = (await Post.limit(limit, offset).order('created_on', true)).toJson();
     posts.forEach(post => post.body = post.body.substr(0, POST_PREVIEW_LENGTH));
-    ctx.body = posts.toJson();
+    ctx.body = new Pagination(posts.length, posts);
 };
 
 async function filterTagIdsNotExist(tagIds) {
@@ -47,7 +48,7 @@ const post = async ctx => {
         ctx.body = post;
     } catch (e) {
         ctx.status = 400;
-        ctx.body = {message: "params error", errors: e.toString().split('\n')};
+        ctx.body = new ErrorMessages("params error", e.toString().split('\n'));
     }
 };
 
@@ -58,7 +59,7 @@ const patch = async ctx => {
         const post = await Post.find(postId);
         if (!post) {
             ctx.status = 400;
-            ctx.body = {message: "params error", errors: ["invalid post id"]};
+            ctx.body = new ErrorMessages("params error", ["invalid post id"]);
             return;
         }
         await post.update({
@@ -85,7 +86,7 @@ const patch = async ctx => {
     } catch (e) {
         console.error(e);
         ctx.status = 400;
-        ctx.body = {message: "params error", errors: e.toString().split('\n')};
+        ctx.body = new ErrorMessages("params error", e.toString().split('\n'));
     }
 };
 
