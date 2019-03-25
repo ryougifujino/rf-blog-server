@@ -6,7 +6,7 @@ const post = async ctx => {
     const {album: {name} = {}} = ctx.request.body;
     try {
         const album = await Album.create({
-            name,
+            name,   //TODO to validate name length
             created_on: DateUtils.nowUtcDateTimeString()
         });
         ctx.status = 201;

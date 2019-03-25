@@ -34,10 +34,10 @@ const post = async ctx => {
     try {
         const {post: {title, body, is_private, album_id, tag_ids} = {}} = ctx.request.body;
         const post = (await Post.create({
-            title,
+            title,      //TODO
             body,
             is_private,
-            album_id,
+            album_id,   //TODO to validate whether album_id is existing
             created_on: DateUtils.nowUtcDateTimeString()
         })).toJson();
         if (tag_ids && Array.isArray(tag_ids)) {
@@ -76,7 +76,7 @@ const patch = async ctx => {
             title,
             body,
             is_private,
-            album_id
+            album_id    //TODO
         });
         if (Array.isArray(tag_ids) && tag_ids.length !== 0) {
             const validTags = await Tag.find(tag_ids);

@@ -5,6 +5,7 @@ const DateUtils = require('../lib/date-utils');
 const CONTENT_LENGTH_LIMIT = 5000;
 
 const post = async ctx => {
+    //TODO to validate from_user length
     const {comment: {content, from_user, post_id} = {}} = ctx.request.body;
     if (content && content.length > CONTENT_LENGTH_LIMIT) {
         ctx.status = 400;
