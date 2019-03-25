@@ -12,6 +12,16 @@ const get = async ctx => {
     ctx.body = new Pagination(posts.length, posts);
 };
 
+const getOne = async ctx => {
+    const postId = ctx.params.id;
+    const post = await Post.find(postId);
+    if (post) {
+        ctx.body = post;
+    } else {
+        ctx.status = 404;
+    }
+};
+
 async function filterTagIdsNotExist(tagIds) {
     if (!tagIds || !Array.isArray(tagIds)) {
         throw new TypeError("tagIds is not a array");
@@ -90,8 +100,17 @@ const patch = async ctx => {
     }
 };
 
+const del = async ctx => {
+    const postId = ctx.params.id;
+    const post = await Post.find(postId);
+    post && post.destroy();
+    ctx.status = 204;
+};
+
 module.exports = {
     get,
+    getOne,
     post,
-    patch
+    patch,
+    del
 };
