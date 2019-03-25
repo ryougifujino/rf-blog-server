@@ -10,8 +10,8 @@ module.exports = class Post extends Store.BaseModel {
         // this.attribute('created_on', 'datetime');
 
         this.belongsTo('album', {model: 'Album', from: 'album_id', to: 'id'});
-        this.hasMany('comments', {model: 'Comment', from: 'id', to: 'post_id'});
-        this.hasMany('post_tags', {model: 'PostTag', from: 'id', to: 'post_id'});
+        this.hasMany('comments', {model: 'Comment', from: 'id', to: 'post_id'});    //TODO dependent
+        this.hasMany('post_tags', {model: 'PostTag', from: 'id', to: 'post_id'});   //TODO dependent
         this.hasMany('tags', {model: 'Tag', through: 'post_tags'});
 
         this.convertOutput('is_private', value => Boolean(value), false);
