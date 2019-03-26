@@ -1,9 +1,10 @@
-const {Post, PostTag, Tag} = require('../data');
+const {Album, Post, PostTag, Tag} = require('../data');
 const {ErrorMessages, Pagination} = require('../data/body-templates');
 const DateUtils = require('../lib/date-utils');
 const SetUtils = require('../lib/set-utils');
 
 const POST_PREVIEW_LENGTH = 500;
+const TITLE_LENGTH_LIMIT = 200;
 
 const get = async ctx => {
     const {offset, limit} = ctx.query;
@@ -31,13 +32,20 @@ async function filterTagIdsNotExist(tagIds) {
 }
 
 const post = async ctx => {
+    const {post: {title, body, is_private, album_id, tag_ids} = {}} = ctx.request.body;
+    if (title && title.length > TITLE_LENGTH_LIMIT) {
+        ctx.status = 400;
+        ctx.body = new ErrorMessages("params error", ['title length exceeds limitation']);
+        return;
+    }
+    let albumId = await Album.find(album_id);
+    albumId = albumId ? albumId : undefined;
     try {
-        const {post: {title, body, is_private, album_id, tag_ids} = {}} = ctx.request.body;
         const post = (await Post.create({
-            title,      //TODO
+            title,
             body,
             is_private,
-            album_id,   //TODO to validate whether album_id is existing
+            album_id: albumId,
             created_on: DateUtils.nowUtcDateTimeString()
         })).toJson();
         if (tag_ids && Array.isArray(tag_ids)) {
@@ -64,19 +72,26 @@ const post = async ctx => {
 
 const patch = async ctx => {
     const postId = ctx.params.id;
+    const {post: {title, body, is_private, album_id, tag_ids} = {}} = ctx.request.body;
+    if (title && title.length > TITLE_LENGTH_LIMIT) {
+        ctx.status = 400;
+        ctx.body = new ErrorMessages("params error", ['title length exceeds limitation']);
+        return;
+    }
+    const post = await Post.find(postId);
+    if (!post) {
+        ctx.status = 400;
+        ctx.body = new ErrorMessages("params error", ["invalid post id"]);
+        return;
+    }
+    let albumId = await Album.find(album_id);
+    albumId = albumId ? albumId : undefined;
     try {
-        const {post: {title, body, is_private, album_id, tag_ids} = {}} = ctx.request.body;
-        const post = await Post.find(postId);
-        if (!post) {
-            ctx.status = 400;
-            ctx.body = new ErrorMessages("params error", ["invalid post id"]);
-            return;
-        }
         await post.update({
             title,
             body,
             is_private,
-            album_id    //TODO
+            album_id: albumId
         });
         if (Array.isArray(tag_ids) && tag_ids.length !== 0) {
             const validTags = await Tag.find(tag_ids);

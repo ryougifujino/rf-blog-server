@@ -2,11 +2,18 @@ const {Album} = require('../data');
 const {ErrorMessages, Pagination} = require('../data/body-templates');
 const DateUtils = require('../lib/date-utils');
 
+const NAME_LENGTH_LIMIT = 200;
+
 const post = async ctx => {
     const {album: {name} = {}} = ctx.request.body;
+    if (name && name.length > NAME_LENGTH_LIMIT) {
+        ctx.status = 400;
+        ctx.body = new ErrorMessages("params error", ['name length exceeds limitation']);
+        return;
+    }
     try {
         const album = await Album.create({
-            name,   //TODO to validate name length
+            name,
             created_on: DateUtils.nowUtcDateTimeString()
         });
         ctx.status = 201;
@@ -26,17 +33,20 @@ const del = async ctx => {
 
 const patch = async ctx => {
     const albumId = ctx.params.id;
+    const {album: {name} = {}} = ctx.request.body;
+    if (name && name.length > NAME_LENGTH_LIMIT) {
+        ctx.status = 400;
+        ctx.body = new ErrorMessages("params error", ['name length exceeds limitation']);
+        return;
+    }
+    const album = await Album.find(albumId);
+    if (!album) {
+        ctx.status = 400;
+        ctx.body = new ErrorMessages("params error", ["invalid album id"]);
+        return;
+    }
     try {
-        const {album: {name} = {}} = ctx.request.body;
-        const album = await Album.find(albumId);
-        if (!album) {
-            ctx.status = 400;
-            ctx.body = new ErrorMessages("params error", ["invalid album id"]);
-            return;
-        }
-        await album.update({
-            name
-        });
+        await album.update({name});
         ctx.status = 204;
     } catch (e) {
         console.error(e);

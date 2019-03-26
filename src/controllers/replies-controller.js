@@ -2,23 +2,28 @@ const {Reply, Comment} = require('../data');
 const {ErrorMessages, Pagination} = require('../data/body-templates');
 const DateUtils = require('../lib/date-utils');
 
-const REPLY_LENGTH_LIMITATION = 1000;
+const REPLY_LENGTH_LIMIT = 1000;
+const FROM_USER_LENGTH_LIMIT = 20;
 
 const post = async ctx => {
-    //TODO to validate from_user length
     const {reply: {content, from_user, comment_id} = {}} = ctx.request.body;
-    if (content && content.length > REPLY_LENGTH_LIMITATION) {
+    if (content && content.length > REPLY_LENGTH_LIMIT) {
         ctx.status = 400;
         ctx.body = new ErrorMessages("params error", ['content length exceeds limitation']);
         return;
     }
+    if (from_user && from_user.length > FROM_USER_LENGTH_LIMIT) {
+        ctx.status = 400;
+        ctx.body = new ErrorMessages("params error", ['from user length exceeds limitation']);
+        return;
+    }
+    const comment = await Comment.find(comment_id);
+    if (!comment) {
+        ctx.status = 400;
+        ctx.body = new ErrorMessages("params error", ['comment id does not exist']);
+        return;
+    }
     try {
-        const comment = await Comment.find(comment_id);
-        if (!comment) {
-            ctx.status = 400;
-            ctx.body = new ErrorMessages("params error", ['comment id does not exist']);
-            return;
-        }
         const reply = await Reply.create({
             content,
             from_user,
