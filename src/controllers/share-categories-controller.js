@@ -46,10 +46,22 @@ const del = async ctx => {
 
 const patch = async ctx => {
     const shareCategoryId = ctx.params.id;
-    const {share_category: {name} = {}} = ctx.request.body;
-    if (name && name.length > NAME_LENGTH_LIMIT) {
+    let {share_category: {name} = {}} = ctx.request.body;
+
+    if (typeof name !== 'string') {
         ctx.status = 400;
-        ctx.body = new ErrorMessages("params error", ['name length exceeds limitation']);
+        ctx.body = new ErrorMessages("params error", ['wrong type of name']);
+        return;
+    }
+    name = name.trim();
+    if (!name || name.length > NAME_LENGTH_LIMIT) {
+        ctx.status = 400;
+        ctx.body = new ErrorMessages("params error", ['wrong length of name']);
+        return;
+    }
+    if ((await ShareCategory.where({name})).length !== 0) {
+        ctx.status = 409;
+        ctx.body = new ErrorMessages("params error", ['name already exists']);
         return;
     }
     const shareCategory = await ShareCategory.find(shareCategoryId);
@@ -58,6 +70,7 @@ const patch = async ctx => {
         ctx.body = new ErrorMessages("params error", ["invalid share category id"]);
         return;
     }
+
     try {
         await shareCategory.update({name});
         ctx.status = 204;
