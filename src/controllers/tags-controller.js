@@ -5,12 +5,25 @@ const DateUtils = require('../lib/date-utils');
 const NAME_LENGTH_LIMIT = 20;
 
 const post = async ctx => {
-    const {tag: {name} = {}} = ctx.request.body;
-    if (name && name.length > NAME_LENGTH_LIMIT) {
+    let {tag: {name} = {}} = ctx.request.body;
+
+    if (typeof name !== 'string') {
         ctx.status = 400;
-        ctx.body = new ErrorMessages("params error", ['name length exceeds limitation'])
+        ctx.body = new ErrorMessages("params error", ['wrong type of name']);
         return;
     }
+    name = name.trim();
+    if (!name || name.length > NAME_LENGTH_LIMIT) {
+        ctx.status = 400;
+        ctx.body = new ErrorMessages("params error", ['wrong length of name']);
+        return;
+    }
+    if ((await Tag.where({name})).length !== 0) {
+        ctx.status = 409;
+        ctx.body = new ErrorMessages("params error", ['name already exists']);
+        return;
+    }
+
     try {
         const tag = await Tag.create({
             name,
