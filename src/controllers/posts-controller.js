@@ -3,13 +3,14 @@ const {ErrorMessages, Pagination} = require('../data/body-templates');
 const DateUtils = require('../lib/date-utils');
 const SetUtils = require('../lib/set-utils');
 
-const POST_PREVIEW_LENGTH = 500;
+const POST_PREVIEW_LENGTH_LIMIT = 500;
 const TITLE_LENGTH_LIMIT = 200;
+const TAG_NAME_LENGTH_LIMIT = 20;
 
 const get = async ctx => {
     const {offset, limit} = ctx.query;
     const posts = (await Post.limit(limit, offset).order('created_on', true)).toJson();
-    posts.forEach(post => post.body = post.body.substr(0, POST_PREVIEW_LENGTH));
+    posts.forEach(post => post.body = post.body.substr(0, POST_PREVIEW_LENGTH_LIMIT));
     ctx.body = new Pagination(posts.length, posts);
 };
 
@@ -23,16 +24,17 @@ const getOne = async ctx => {
     }
 };
 
-async function filterTagIdsNotExist(tagIds) {
-    if (!tagIds || !Array.isArray(tagIds)) {
-        throw new TypeError("tagIds is not a array");
-    }
-    const tags = await Tag.find(tagIds);
-    return tags ? tags.map(tag => tag.id) : [];
+async function createTagsNotExist(tagNames) {
+    const tagsExisting = await Tag.where({name: tagNames});
+    const tagNamesNew = [...SetUtils.difference(tagNames, tagsExisting.map(t => t.name))];
+    const tagsNew = await Tag.create(tagNamesNew.map(
+        name => ({name, created_on: DateUtils.nowUtcDateTimeString()})
+    ));
+    return [...tagsExisting.map(t => t.id), ...tagsNew.map(t => t.id)];
 }
 
 const post = async ctx => {
-    const {post: {title, body, is_private, album_id, tag_ids} = {}} = ctx.request.body;
+    const {post: {title, body, is_private, album_id, tag_names} = {}} = ctx.request.body;
     if (title && title.length > TITLE_LENGTH_LIMIT) {
         ctx.status = 400;
         ctx.body = new ErrorMessages("params error", ['title length exceeds limitation']);
@@ -48,8 +50,12 @@ const post = async ctx => {
             album_id: albumId,
             created_on: DateUtils.nowUtcDateTimeString()
         })).toJson();
-        if (tag_ids && Array.isArray(tag_ids)) {
-            const tagIdsToSave = await filterTagIdsNotExist(tag_ids);
+        if (tag_names && Array.isArray(tag_names)) {
+            const tagNames = [...new Set(tag_names)]
+                .filter(tag_name => typeof tag_name === 'string')
+                .map(tag_name => tag_name.trim())
+                .filter(tag_name => tag_name && tag_name.length <= TAG_NAME_LENGTH_LIMIT);
+            const tagIdsToSave = await createTagsNotExist(tagNames);
 
             // // get all tags of this post (should be empty, because the post is a new one)
             // const postTags = await PostTag.where({post_id: post.id}).include('tags');
@@ -60,7 +66,7 @@ const post = async ctx => {
 
             const postTagsToSave = tagIdsToSave.map(tagId => ({post_id: post.id, tag_id: tagId}));
             await PostTag.create(postTagsToSave);
-            post.tags_id = tagIdsToSave;
+            post.tag_names = tagNames;
         }
         ctx.status = 201;
         ctx.body = post;
