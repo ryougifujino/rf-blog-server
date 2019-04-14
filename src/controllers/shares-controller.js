@@ -5,10 +5,17 @@ const DateUtils = require('../lib/date-utils');
 const TITLE_LENGTH_LIMIT = 200;
 
 const post = async ctx => {
-    const {share: {title, url, share_category_id} = {}} = ctx.request.body;
-    if (title && title.length > TITLE_LENGTH_LIMIT) {
+    let {share: {title, url, share_category_id} = {}} = ctx.request.body;
+
+    if (typeof title !== 'string') {
         ctx.status = 400;
-        ctx.body = new ErrorMessages("params error", ['title length exceeds limitation']);
+        ctx.body = new ErrorMessages("params error", ['wrong type of title']);
+        return;
+    }
+    title = title.trim();
+    if (!title || title.length > TITLE_LENGTH_LIMIT) {
+        ctx.status = 400;
+        ctx.body = new ErrorMessages("params error", ['wrong length of title']);
         return;
     }
     try {
@@ -40,10 +47,17 @@ const del = async ctx => {
 
 const patch = async ctx => {
     const shareId = ctx.params.id;
-    const {share: {title, url, share_category_id} = {}} = ctx.request.body;
-    if (title && title.length > TITLE_LENGTH_LIMIT) {
+    let {share: {title, url, share_category_id} = {}} = ctx.request.body;
+
+    if (typeof title !== 'string') {
         ctx.status = 400;
-        ctx.body = new ErrorMessages("params error", ['title length exceeds limitation']);
+        ctx.body = new ErrorMessages("params error", ['wrong type of title']);
+        return;
+    }
+    title = title.trim();
+    if (!title || title.length > TITLE_LENGTH_LIMIT) {
+        ctx.status = 400;
+        ctx.body = new ErrorMessages("params error", ['wrong length of title']);
         return;
     }
     const share = await Share.find(shareId);

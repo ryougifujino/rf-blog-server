@@ -5,10 +5,22 @@ const DateUtils = require('../lib/date-utils');
 const NAME_LENGTH_LIMIT = 200;
 
 const post = async ctx => {
-    const {album: {name} = {}} = ctx.request.body;
-    if (name && name.length > NAME_LENGTH_LIMIT) {
+    let {album: {name} = {}} = ctx.request.body;
+    if (typeof name !== 'string') {
         ctx.status = 400;
-        ctx.body = new ErrorMessages("params error", ['name length exceeds limitation']);
+        ctx.body = new ErrorMessages("params error", ['wrong type of name']);
+        return;
+    }
+    name = name.trim();
+    if (!name || name.length > NAME_LENGTH_LIMIT) {
+        ctx.status = 400;
+        ctx.body = new ErrorMessages("params error", ['wrong length of name']);
+        return;
+    }
+    const albumExisting = await Album.where({name});
+    if (!albumExisting.length) {
+        ctx.status = 409;
+        ctx.body = new ErrorMessages("params error", ['name already exists']);
         return;
     }
     try {
@@ -33,10 +45,16 @@ const del = async ctx => {
 
 const patch = async ctx => {
     const albumId = ctx.params.id;
-    const {album: {name} = {}} = ctx.request.body;
-    if (name && name.length > NAME_LENGTH_LIMIT) {
+    let {album: {name} = {}} = ctx.request.body;
+    if (typeof name !== 'string') {
         ctx.status = 400;
-        ctx.body = new ErrorMessages("params error", ['name length exceeds limitation']);
+        ctx.body = new ErrorMessages("params error", ['wrong type of name']);
+        return;
+    }
+    name = name.trim();
+    if (!name || name.length > NAME_LENGTH_LIMIT) {
+        ctx.status = 400;
+        ctx.body = new ErrorMessages("params error", ['wrong length of name']);
         return;
     }
     const album = await Album.find(albumId);

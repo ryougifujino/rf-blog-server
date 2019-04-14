@@ -34,10 +34,21 @@ async function createTagsNotExist(tagNames) {
 }
 
 const post = async ctx => {
-    const {post: {title, body, is_private, album_id, tag_names} = {}} = ctx.request.body;
-    if (title && title.length > TITLE_LENGTH_LIMIT) {
+    let {post: {title, body = "", is_private, album_id, tag_names} = {}} = ctx.request.body;
+    const titleIsString = typeof title === 'string';
+    const bodyIsString = typeof body === 'string';
+    if (!titleIsString || !bodyIsString) {
         ctx.status = 400;
-        ctx.body = new ErrorMessages("params error", ['title length exceeds limitation']);
+        const errors = [];
+        !titleIsString && errors.push('wrong type of title');
+        !bodyIsString && errors.push('wrong type of body');
+        ctx.body = new ErrorMessages("params error", errors);
+        return;
+    }
+    title = title.trim();
+    if (!title || title.length > TITLE_LENGTH_LIMIT) {
+        ctx.status = 400;
+        ctx.body = new ErrorMessages("params error", ['wrong length of title']);
         return;
     }
     let albumId = await Album.find(album_id);
@@ -76,7 +87,7 @@ const post = async ctx => {
     }
 };
 
-const patch = async ctx => {
+const patch = async ctx => {    //TODO fix tag_ids
     const postId = ctx.params.id;
     const {post: {title, body, is_private, album_id, tag_ids} = {}} = ctx.request.body;
     if (title && title.length > TITLE_LENGTH_LIMIT) {
