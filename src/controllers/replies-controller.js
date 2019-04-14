@@ -6,17 +6,31 @@ const REPLY_LENGTH_LIMIT = 1000;
 const FROM_USER_LENGTH_LIMIT = 20;
 
 const post = async ctx => {
-    const {reply: {content, from_user, comment_id} = {}} = ctx.request.body;
-    if (content && content.length > REPLY_LENGTH_LIMIT) {
+    let {reply: {content, from_user, comment_id} = {}} = ctx.request.body;
+
+    const contentIsString = typeof content === 'string';
+    const fromUserIsString = typeof from_user === 'string';
+    if (!contentIsString || !fromUserIsString) {
         ctx.status = 400;
-        ctx.body = new ErrorMessages("params error", ['content length exceeds limitation']);
+        const errors = [];
+        !contentIsString && errors.push('wrong type of content');
+        !fromUserIsString && errors.push('wrong type of from_user');
+        ctx.body = new ErrorMessages("params error", errors);
         return;
     }
-    if (from_user && from_user.length > FROM_USER_LENGTH_LIMIT) {
+    content = content.trim();
+    from_user = from_user.trim();
+    if (!content || content.length > REPLY_LENGTH_LIMIT) {
         ctx.status = 400;
-        ctx.body = new ErrorMessages("params error", ['from user length exceeds limitation']);
+        ctx.body = new ErrorMessages("params error", ['wrong length of content']);
         return;
     }
+    if (!from_user || from_user.length > FROM_USER_LENGTH_LIMIT) {
+        ctx.status = 400;
+        ctx.body = new ErrorMessages("params error", ['wrong length of from_user']);
+        return;
+    }
+
     const comment = await Comment.find(comment_id);
     if (!comment) {
         ctx.status = 400;

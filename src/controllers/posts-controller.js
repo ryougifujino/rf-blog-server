@@ -87,7 +87,7 @@ const post = async ctx => {
     }
 };
 
-const patch = async ctx => {
+const patch = async ctx => {    //TODO fix tag_ids
     const postId = ctx.params.id;
     const {post: {title, body, is_private, album_id, tag_ids} = {}} = ctx.request.body;
     if (title && title.length > TITLE_LENGTH_LIMIT) {
