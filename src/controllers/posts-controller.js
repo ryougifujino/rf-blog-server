@@ -33,6 +33,16 @@ async function createTagsNotExist(tagNames) {
     return [...tagsExisting.map(t => t.id), ...tagsNew.map(t => t.id)];
 }
 
+function justifyTagNames(tagNames) {
+    if (!Array.isArray(tagNames)) {
+        return [];
+    }
+    return [...new Set(tagNames)]
+        .filter(tag_name => typeof tag_name === 'string')
+        .map(tag_name => tag_name.trim())
+        .filter(tag_name => tag_name && tag_name.length <= TAG_NAME_LENGTH_LIMIT);
+}
+
 const post = async ctx => {
     let {post: {title, body = "", is_private, album_id, tag_names} = {}} = ctx.request.body;
     const titleIsString = typeof title === 'string';
@@ -61,11 +71,8 @@ const post = async ctx => {
             album_id: albumId,
             created_on: DateUtils.nowUtcDateTimeString()
         })).toJson();
-        if (tag_names && Array.isArray(tag_names)) {
-            const tagNames = [...new Set(tag_names)]
-                .filter(tag_name => typeof tag_name === 'string')
-                .map(tag_name => tag_name.trim())
-                .filter(tag_name => tag_name && tag_name.length <= TAG_NAME_LENGTH_LIMIT);
+        const tagNames = justifyTagNames(tag_names);
+        if (tagNames.length > 0) {
             const tagIdsToSave = await createTagsNotExist(tagNames);
 
             // // get all tags of this post (should be empty, because the post is a new one)
@@ -87,12 +94,20 @@ const post = async ctx => {
     }
 };
 
-const patch = async ctx => {    //TODO fix tag_ids
+const patch = async ctx => {
     const postId = ctx.params.id;
-    const {post: {title, body, is_private, album_id, tag_ids} = {}} = ctx.request.body;
-    if (title && title.length > TITLE_LENGTH_LIMIT) {
+    let {post: {title, body, is_private, album_id, tag_names} = {}} = ctx.request.body;
+
+    if (typeof title === 'string') {
+        title = title.trim();
+        if (title.length === 0 || title.length > TITLE_LENGTH_LIMIT) {
+            ctx.status = 400;
+            ctx.body = new ErrorMessages("params error", ['wrong length of title']);
+            return;
+        }
+    } else if (typeof title !== 'undefined') {
         ctx.status = 400;
-        ctx.body = new ErrorMessages("params error", ['title length exceeds limitation']);
+        ctx.body = new ErrorMessages("params error", ['wrong type of title']);
         return;
     }
     const post = await Post.find(postId);
@@ -101,8 +116,8 @@ const patch = async ctx => {    //TODO fix tag_ids
         ctx.body = new ErrorMessages("params error", ["invalid post id"]);
         return;
     }
-    let albumId = await Album.find(album_id);
-    albumId = albumId ? albumId : undefined;
+    const album = await Album.find(album_id);
+    const albumId = album ? album.id : undefined;
     try {
         await post.update({
             title,
@@ -110,9 +125,9 @@ const patch = async ctx => {    //TODO fix tag_ids
             is_private,
             album_id: albumId
         });
-        if (Array.isArray(tag_ids) && tag_ids.length !== 0) {
-            const validTags = await Tag.find(tag_ids);
-            const validTagIds = validTags ? validTags.map(validTag => validTag.id) : [];
+        if (Array.isArray(tag_names)) {
+            const tagNames = justifyTagNames(tag_names);
+            const validTagIds = await createTagsNotExist(tagNames);
             const tagsOfThePost = await PostTag.where({post_id: postId}).include('tags');
             const tagIdsOfThePost = tagsOfThePost.map(postTag => postTag.tag_id);
             const tagToDeleteIds = [...SetUtils.difference(tagIdsOfThePost, validTagIds)];
