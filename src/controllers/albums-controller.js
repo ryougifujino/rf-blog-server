@@ -18,7 +18,7 @@ const post = async ctx => {
         return;
     }
     const albumExisting = await Album.where({name});
-    if (!albumExisting.length) {
+    if (albumExisting.length !== 0) {
         ctx.status = 409;
         ctx.body = new ErrorMessages("params error", ['name already exists']);
         return;
