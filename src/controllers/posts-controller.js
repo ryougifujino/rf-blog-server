@@ -61,8 +61,8 @@ const post = async ctx => {
         ctx.body = new ErrorMessages("params error", ['wrong length of title']);
         return;
     }
-    let albumId = await Album.find(album_id);
-    albumId = albumId ? albumId : undefined;
+    const albumExisting = await Album.find(album_id);
+    const albumId = albumExisting ? albumExisting.id : undefined;
     try {
         const post = (await Post.create({
             title,
