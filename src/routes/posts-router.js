@@ -2,6 +2,7 @@ const Router = require('koa-router');
 const ctrl = require('../controllers').posts;
 const router = new Router();
 
+router.get('/posts/titles', ctrl.get);
 router.get('/posts', ctrl.get);
 router.get('/posts/:id', ctrl.getOne);
 router.post('/posts', ctrl.post);

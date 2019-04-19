@@ -3,14 +3,23 @@ const {ErrorMessages, Pagination} = require('../data/body-templates');
 const DateUtils = require('../lib/date-utils');
 const SetUtils = require('../lib/set-utils');
 
-const POST_PREVIEW_LENGTH_LIMIT = 500;
+const PREVIEW_LENGTH_LIMIT = 500;
 const TITLE_LENGTH_LIMIT = 200;
 const TAG_NAME_LENGTH_LIMIT = 20;
+const RE_TITLES = /^\/[a-z\/]+?titles/;
 
 const get = async ctx => {
+    const isTitles = RE_TITLES.test(ctx.url);
     const {offset, limit} = ctx.query;
-    const posts = (await Post.limit(limit, offset).order('created_on', true)).toJson();
-    posts.forEach(post => post.body = post.body.substr(0, POST_PREVIEW_LENGTH_LIMIT));
+    const posts = (await Post.limit(limit, offset).include('tags').order('created_on', true)).toJson();
+    posts.forEach(post => {
+        if (isTitles) {
+            delete post.body;
+        } else {
+            post.body = post.body.substr(0, PREVIEW_LENGTH_LIMIT);
+        }
+        delete post.post_tags;
+    });
     ctx.body = new Pagination(posts.length, posts);
 };
 
