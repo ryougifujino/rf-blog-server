@@ -39,7 +39,7 @@ async function createTagsNotExist(tagNames) {
     const tagsNew = await Tag.create(tagNamesNew.map(
         name => ({name, created_on: DateUtils.nowUtcDateTimeString()})
     ));
-    return [...tagsExisting.map(t => t.id), ...tagsNew.map(t => t.id)];
+    return [...tagsExisting, ...tagsNew];
 }
 
 function justifyTagNames(tagNames) {
@@ -81,8 +81,10 @@ const post = async ctx => {
             created_on: DateUtils.nowUtcDateTimeString()
         })).toJson();
         const tagNames = justifyTagNames(tag_names);
+        post.tags = [];
         if (tagNames.length > 0) {
-            const tagIdsToSave = await createTagsNotExist(tagNames);
+            const tagsOfThePost = await createTagsNotExist(tagNames);
+            const tagIdsToSave = tagsOfThePost.map(tag => tag.id);
 
             // // get all tags of this post (should be empty, because the post is a new one)
             // const postTags = await PostTag.where({post_id: post.id}).include('tags');
@@ -93,8 +95,9 @@ const post = async ctx => {
 
             const postTagsToSave = tagIdsToSave.map(tagId => ({post_id: post.id, tag_id: tagId}));
             await PostTag.create(postTagsToSave);
-            post.tag_names = tagNames;
+            post.tags = tagsOfThePost;
         }
+        post.body = post.body.substr(0, PREVIEW_LENGTH_LIMIT);
         ctx.status = 201;
         ctx.body = post;
     } catch (e) {
@@ -136,7 +139,7 @@ const patch = async ctx => {
         });
         if (Array.isArray(tag_names)) {
             const tagNames = justifyTagNames(tag_names);
-            const validTagIds = await createTagsNotExist(tagNames);
+            const validTagIds = (await createTagsNotExist(tagNames)).map(tag => tag.id);
             const tagsOfThePost = await PostTag.where({post_id: postId}).include('tags');
             const tagIdsOfThePost = tagsOfThePost.map(postTag => postTag.tag_id);
             const tagToDeleteIds = [...SetUtils.difference(tagIdsOfThePost, validTagIds)];
