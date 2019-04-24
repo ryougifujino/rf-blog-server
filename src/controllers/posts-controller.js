@@ -25,8 +25,10 @@ const get = async ctx => {
 
 const getOne = async ctx => {
     const postId = ctx.params.id;
-    const post = await Post.find(postId);
+    const post = (await Post.find(postId).include(['tags', 'album'])).toJson();
     if (post) {
+        delete post.post_tags;
+        post.album = post.album ? post.album : null;
         ctx.body = post;
     } else {
         ctx.status = 404;
