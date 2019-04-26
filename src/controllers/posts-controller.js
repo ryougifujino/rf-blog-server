@@ -2,6 +2,7 @@ const {Album, Post, PostTag, Tag} = require('../data');
 const {ErrorMessages, Pagination} = require('../data/body-templates');
 const DateUtils = require('../lib/date-utils');
 const SetUtils = require('../lib/set-utils');
+const md5 = require('md5');
 
 const PREVIEW_LENGTH_LIMIT = 500;
 const TITLE_LENGTH_LIMIT = 200;
@@ -30,7 +31,14 @@ const getOne = async ctx => {
         post = post.toJson();
         delete post.post_tags;
         post.album = post.album ? post.album : null;
-        ctx.body = post;
+
+        const etag = md5(JSON.stringify(post));
+        if (ctx.headers['if-none-match'] === etag) {
+            ctx.status = 304;
+        } else {
+            ctx.set('ETag', etag);
+            ctx.body = post;
+        }
     } else {
         ctx.status = 404;
     }
