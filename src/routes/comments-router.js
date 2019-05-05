@@ -4,6 +4,6 @@ const router = new Router();
 
 router.post('/comments', ctrl.post);
 router.delete('/comments/:id', ctrl.del);
-router.get('/comments', ctrl.get);
+router.get('/comments/:id', ctrl.get);
 
 module.exports = router.routes();

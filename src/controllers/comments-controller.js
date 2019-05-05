@@ -58,8 +58,10 @@ const del = async ctx => {
 };
 
 const get = async ctx => {
+    const postId = ctx.params.id;
     const {limit, offset} = ctx.query;
-    const comments = await Comment.limit(limit, offset).order('created_on', true);
+    const comments = await Comment.where({post_id: postId})
+        .include('replies').limit(limit, offset).order('created_on', true);
     ctx.body = new Pagination(comments.length, comments);
 };
 
