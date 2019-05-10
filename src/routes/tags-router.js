@@ -2,9 +2,11 @@ const Router = require('koa-router');
 const ctrl = require('../controllers').tags;
 const router = new Router();
 
-router.post('/tags', ctrl.post);
-router.delete('/tags/:id', ctrl.del);
-router.patch('/tags/:id', ctrl.patch);
+const auth = require('../middleware/auth-required-middleware');
+
+router.post('/tags', auth, ctrl.post);
+router.delete('/tags/:id', auth, ctrl.del);
+router.patch('/tags/:id', auth, ctrl.patch);
 router.get('/tags', ctrl.get);
 
 module.exports = router.routes();
