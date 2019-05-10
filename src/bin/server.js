@@ -1,6 +1,6 @@
 const app = require('../lib/app');
 const db = require('../data');
-const {PORT} = require('../config');
+const {PORT} = require('../common/config');
 
 async function main() {
     await db.openDB();
