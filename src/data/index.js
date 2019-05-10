@@ -1,5 +1,5 @@
 const Store = require('openrecord/store/sqlite3');
-const {DB_PATH} = require('../config');
+const {DB_PATH} = require('../common/config');
 const dbCreator = require('./db-creator');
 
 const Album = require('./album');

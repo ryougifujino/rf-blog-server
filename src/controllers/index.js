@@ -1,3 +1,4 @@
+const token = require('./token-controller');
 const posts = require('./posts-controller');
 const albums = require('./albums-controller');
 const comments = require('./comments-controller');
@@ -7,6 +8,7 @@ const shareCategories = require('./share-categories-controller');
 const tags = require('./tags-controller');
 
 module.exports = {
+    token,
     posts,
     albums,
     comments,
