@@ -3,6 +3,8 @@ const {ErrorMessages, Pagination} = require('../data/body-templates');
 const DateUtils = require('../lib/date-utils');
 const SetUtils = require('../lib/set-utils');
 const md5 = require('md5');
+const {COOKIE_NAME_TOKEN} = require('../common/constants');
+const memoryCache = require('../lib/memory-cache');
 
 const PREVIEW_LENGTH_LIMIT = 500;
 const TITLE_LENGTH_LIMIT = 200;
@@ -12,7 +14,14 @@ const RE_TITLES = /^\/[a-z\/]+?titles/;
 const get = async ctx => {
     const isTitles = RE_TITLES.test(ctx.url);
     const {offset, limit} = ctx.query;
-    const posts = (await Post.limit(limit, offset).include('tags').order('created_on', true)).toJson();
+    const token = ctx.cookies.get(COOKIE_NAME_TOKEN);
+    let posts;
+    if (token && token === memoryCache.getItem(COOKIE_NAME_TOKEN)) {
+        posts = (await Post.limit(limit, offset).include('tags').order('created_on', true)).toJson();
+    } else {
+        posts = (await Post.where({is_private: false}).include('tags')
+            .order('created_on', true).limit(limit, offset)).toJson();
+    }
     posts.forEach(post => {
         if (isTitles) {
             delete post.body;
