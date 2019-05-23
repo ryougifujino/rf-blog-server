@@ -37,6 +37,13 @@ const getOne = async ctx => {
     const postId = ctx.params.id;
     let post = await Post.find(postId).include(['tags', 'album']);
     if (post) {
+        if (post.is_private) {
+            const token = ctx.cookies.get(COOKIE_NAME_TOKEN);
+            if (!token || token !== memoryCache.getItem(COOKIE_NAME_TOKEN)) {
+                ctx.status = 401;
+                return;
+            }
+        }
         post = post.toJson();
         delete post.post_tags;
         post.album = post.album ? post.album : null;
