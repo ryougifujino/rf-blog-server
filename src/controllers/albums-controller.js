@@ -1,19 +1,16 @@
 const {Album} = require('../data');
 const {Pagination} = require('../data/body-templates');
 const DateUtils = require('../lib/date-utils');
-const Joi = require('@hapi/joi');
+const {buildSchema, validate} = require('../lib/joi-helper');
 
 const NAME_LENGTH_LIMIT = 200;
+const schema = buildSchema(Joi => ({
+    name: Joi.string().trim().required().min(1).max(NAME_LENGTH_LIMIT)
+}));
 
 const post = async ctx => {
     let {album: {name} = {}} = ctx.request.body;
-    const schema = Joi.object().keys({
-        name: Joi.string().trim().required().min(1).max(NAME_LENGTH_LIMIT)
-    });
-    const {error} = Joi.validate({name}, schema);
-    if (error) {
-        ctx.status = 400;
-        ctx.body = error.details.map(({message}) => message);
+    if (!validate(ctx, schema, {name})) {
         return;
     }
     name = name.trim();
@@ -40,15 +37,7 @@ const del = async ctx => {
 const patch = async ctx => {
     const albumId = ctx.params.id;
     let {album: {name} = {}} = ctx.request.body;
-    if (typeof name !== 'string') {
-        ctx.status = 400;
-        ctx.body = ['wrong type of name'];
-        return;
-    }
-    name = name.trim();
-    if (!name || name.length > NAME_LENGTH_LIMIT) {
-        ctx.status = 400;
-        ctx.body = ['wrong length of name'];
+    if (!validate(ctx, schema, {name})) {
         return;
     }
     const album = await Album.find(albumId);
@@ -57,14 +46,8 @@ const patch = async ctx => {
         ctx.body = ["invalid album id"];
         return;
     }
-    try {
-        await album.update({name});
-        ctx.status = 204;
-    } catch (e) {
-        console.error(e);
-        ctx.status = 400;
-        ctx.body = e.toString().split('\n');
-    }
+    await album.update({name});
+    ctx.status = 204;
 };
 
 const get = async ctx => {
