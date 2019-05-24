@@ -1,5 +1,5 @@
 const {Tag} = require('../data');
-const {ErrorMessages, Pagination} = require('../data/body-templates');
+const {Pagination} = require('../data/body-templates');
 const DateUtils = require('../lib/date-utils');
 
 const NAME_LENGTH_LIMIT = 20;
@@ -9,18 +9,18 @@ const post = async ctx => {
 
     if (typeof name !== 'string') {
         ctx.status = 400;
-        ctx.body = new ErrorMessages("params error", ['wrong type of name']);
+        ctx.body = ['wrong type of name'];
         return;
     }
     name = name.trim();
     if (!name || name.length > NAME_LENGTH_LIMIT) {
         ctx.status = 400;
-        ctx.body = new ErrorMessages("params error", ['wrong length of name']);
+        ctx.body = ['wrong length of name'];
         return;
     }
     if ((await Tag.where({name})).length !== 0) {
         ctx.status = 409;
-        ctx.body = new ErrorMessages("params error", ['name already exists']);
+        ctx.body = ['name already exists'];
         return;
     }
 
@@ -33,7 +33,7 @@ const post = async ctx => {
         ctx.body = tag;
     } catch (e) {
         ctx.status = 400;
-        ctx.body = new ErrorMessages("params error", e.toString().split('\n'));
+        ctx.body = e.toString().split('\n');
     }
 };
 
@@ -50,24 +50,24 @@ const patch = async ctx => {
 
     if (typeof name !== 'string') {
         ctx.status = 400;
-        ctx.body = new ErrorMessages("params error", ['wrong type of name']);
+        ctx.body = ['wrong type of name'];
         return;
     }
     name = name.trim();
     if (!name || name.length > NAME_LENGTH_LIMIT) {
         ctx.status = 400;
-        ctx.body = new ErrorMessages("params error", ['wrong length of name']);
+        ctx.body = ['wrong length of name'];
         return;
     }
     if ((await Tag.where({name})).length !== 0) {
         ctx.status = 409;
-        ctx.body = new ErrorMessages("params error", ['name already exists']);
+        ctx.body = ['name already exists'];
         return;
     }
     const tag = await Tag.find(tagId);
     if (!tag) {
         ctx.status = 400;
-        ctx.body = new ErrorMessages("params error", ["invalid tag id"]);
+        ctx.body = ["invalid tag id"];
         return;
     }
 
@@ -78,7 +78,7 @@ const patch = async ctx => {
         ctx.status = 204;
     } catch (e) {
         ctx.status = 400;
-        ctx.body = new ErrorMessages("params error", e.toString().split('\n'));
+        ctx.body = e.toString().split('\n');
     }
 };
 

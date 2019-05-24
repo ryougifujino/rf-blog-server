@@ -1,5 +1,5 @@
 const {Album, Post, PostTag, Tag} = require('../data');
-const {ErrorMessages, Pagination} = require('../data/body-templates');
+const {Pagination} = require('../data/body-templates');
 const DateUtils = require('../lib/date-utils');
 const SetUtils = require('../lib/set-utils');
 const md5 = require('md5');
@@ -88,13 +88,13 @@ const post = async ctx => {
         const errors = [];
         !titleIsString && errors.push('wrong type of title');
         !bodyIsString && errors.push('wrong type of body');
-        ctx.body = new ErrorMessages("params error", errors);
+        ctx.body = errors;
         return;
     }
     title = title.trim();
     if (!title || title.length > TITLE_LENGTH_LIMIT) {
         ctx.status = 400;
-        ctx.body = new ErrorMessages("params error", ['wrong length of title']);
+        ctx.body = ['wrong length of title'];
         return;
     }
     const albumExisting = await Album.find(album_id);
@@ -129,7 +129,7 @@ const post = async ctx => {
         ctx.body = post;
     } catch (e) {
         ctx.status = 400;
-        ctx.body = new ErrorMessages("params error", e.toString().split('\n'));
+        ctx.body = e.toString().split('\n');
     }
 };
 
@@ -141,18 +141,18 @@ const patch = async ctx => {
         title = title.trim();
         if (title.length === 0 || title.length > TITLE_LENGTH_LIMIT) {
             ctx.status = 400;
-            ctx.body = new ErrorMessages("params error", ['wrong length of title']);
+            ctx.body = ['wrong length of title'];
             return;
         }
     } else if (typeof title !== 'undefined') {
         ctx.status = 400;
-        ctx.body = new ErrorMessages("params error", ['wrong type of title']);
+        ctx.body = ['wrong type of title'];
         return;
     }
     const post = await Post.find(postId);
     if (!post) {
         ctx.status = 400;
-        ctx.body = new ErrorMessages("params error", ["invalid post id"]);
+        ctx.body = ["invalid post id"];
         return;
     }
     const album = await Album.find(album_id);
@@ -182,7 +182,7 @@ const patch = async ctx => {
     } catch (e) {
         console.error(e);
         ctx.status = 400;
-        ctx.body = new ErrorMessages("params error", e.toString().split('\n'));
+        ctx.body = e.toString().split('\n');
     }
 };
 

@@ -1,25 +1,3 @@
-class ErrorMessages {
-    constructor(message, errors) {
-        this.message = message || '';
-        this.errors = errors || [];
-    }
-
-    setMessage(message) {
-        this.message = message;
-        return this;
-    }
-
-    addError(error) {
-        this.errors.push(error);
-        return this;
-    }
-
-    setErrors(errors) {
-        this.errors = errors;
-        return this;
-    }
-}
-
 class Pagination {
     constructor(totalItems, items) {
         this.total_items = totalItems || 0;
@@ -43,6 +21,5 @@ class Pagination {
 }
 
 module.exports = {
-    ErrorMessages,
     Pagination
 };

@@ -1,39 +1,33 @@
 const {Album} = require('../data');
-const {ErrorMessages, Pagination} = require('../data/body-templates');
+const {Pagination} = require('../data/body-templates');
 const DateUtils = require('../lib/date-utils');
+const Joi = require('@hapi/joi');
 
 const NAME_LENGTH_LIMIT = 200;
 
 const post = async ctx => {
     let {album: {name} = {}} = ctx.request.body;
-    if (typeof name !== 'string') {
+    const schema = Joi.object().keys({
+        name: Joi.string().trim().required().min(1).max(NAME_LENGTH_LIMIT)
+    });
+    const {error} = Joi.validate({name}, schema);
+    if (error) {
         ctx.status = 400;
-        ctx.body = new ErrorMessages("params error", ['wrong type of name']);
+        ctx.body = error.details.map(({message}) => message);
         return;
     }
     name = name.trim();
-    if (!name || name.length > NAME_LENGTH_LIMIT) {
-        ctx.status = 400;
-        ctx.body = new ErrorMessages("params error", ['wrong length of name']);
-        return;
-    }
-    const albumExisting = await Album.where({name});
-    if (albumExisting.length !== 0) {
+    if ((await Album.where({name})).length) {
         ctx.status = 409;
-        ctx.body = new ErrorMessages("params error", ['name already exists']);
+        ctx.body = ['name already exists'];
         return;
     }
-    try {
-        const album = await Album.create({
-            name,
-            created_on: DateUtils.nowUtcDateTimeString()
-        });
-        ctx.status = 201;
-        ctx.body = album;
-    } catch (e) {
-        ctx.status = 400;
-        ctx.body = new ErrorMessages("params error", e.toString().split('\n'));
-    }
+    const album = await Album.create({
+        name,
+        created_on: DateUtils.nowUtcDateTimeString()
+    });
+    ctx.status = 201;
+    ctx.body = album;
 };
 
 const del = async ctx => {
@@ -48,19 +42,19 @@ const patch = async ctx => {
     let {album: {name} = {}} = ctx.request.body;
     if (typeof name !== 'string') {
         ctx.status = 400;
-        ctx.body = new ErrorMessages("params error", ['wrong type of name']);
+        ctx.body = ['wrong type of name'];
         return;
     }
     name = name.trim();
     if (!name || name.length > NAME_LENGTH_LIMIT) {
         ctx.status = 400;
-        ctx.body = new ErrorMessages("params error", ['wrong length of name']);
+        ctx.body = ['wrong length of name'];
         return;
     }
     const album = await Album.find(albumId);
     if (!album) {
         ctx.status = 400;
-        ctx.body = new ErrorMessages("params error", ["invalid album id"]);
+        ctx.body = ["invalid album id"];
         return;
     }
     try {
@@ -69,7 +63,7 @@ const patch = async ctx => {
     } catch (e) {
         console.error(e);
         ctx.status = 400;
-        ctx.body = new ErrorMessages("params error", e.toString().split('\n'));
+        ctx.body = e.toString().split('\n');
     }
 };
 

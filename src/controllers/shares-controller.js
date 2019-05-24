@@ -1,5 +1,5 @@
 const {Share, ShareCategory} = require('../data');
-const {ErrorMessages, Pagination} = require('../data/body-templates');
+const {Pagination} = require('../data/body-templates');
 const DateUtils = require('../lib/date-utils');
 
 const TITLE_LENGTH_LIMIT = 200;
@@ -9,13 +9,13 @@ const post = async ctx => {
 
     if (typeof title !== 'string') {
         ctx.status = 400;
-        ctx.body = new ErrorMessages("params error", ['wrong type of title']);
+        ctx.body = ['wrong type of title'];
         return;
     }
     title = title.trim();
     if (!title || title.length > TITLE_LENGTH_LIMIT) {
         ctx.status = 400;
-        ctx.body = new ErrorMessages("params error", ['wrong length of title']);
+        ctx.body = ['wrong length of title'];
         return;
     }
     try {
@@ -34,7 +34,7 @@ const post = async ctx => {
         ctx.body = share;
     } catch (e) {
         ctx.status = 400;
-        ctx.body = new ErrorMessages("params error", e.toString().split('\n'));
+        ctx.body = e.toString().split('\n');
     }
 };
 
@@ -51,19 +51,19 @@ const patch = async ctx => {
 
     if (typeof title !== 'string') {
         ctx.status = 400;
-        ctx.body = new ErrorMessages("params error", ['wrong type of title']);
+        ctx.body = ['wrong type of title'];
         return;
     }
     title = title.trim();
     if (!title || title.length > TITLE_LENGTH_LIMIT) {
         ctx.status = 400;
-        ctx.body = new ErrorMessages("params error", ['wrong length of title']);
+        ctx.body = ['wrong length of title'];
         return;
     }
     const share = await Share.find(shareId);
     if (!share) {
         ctx.status = 400;
-        ctx.body = new ErrorMessages("params error", ["invalid share id"]);
+        ctx.body = ["invalid share id"];
         return;
     }
     let shareCategoryId = undefined;
@@ -81,7 +81,7 @@ const patch = async ctx => {
     } catch (e) {
         console.error(e);
         ctx.status = 400;
-        ctx.body = new ErrorMessages("params error", e.toString().split('\n'));
+        ctx.body = e.toString().split('\n');
     }
 
 };
