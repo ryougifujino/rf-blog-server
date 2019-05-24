@@ -10,11 +10,12 @@ function validate(ctx, schema, value) {
     return true;
 }
 
-function buildSchema(builder) {
-    return Joi.object().keys(builder(Joi));
+function buildSchema(value) {
+    return Joi.object().keys(value);
 }
 
 module.exports = {
     validate,
-    buildSchema
+    buildSchema,
+    Joi
 };

@@ -1,12 +1,12 @@
 const {Album} = require('../data');
 const {Pagination} = require('../data/body-templates');
 const DateUtils = require('../lib/date-utils');
-const {buildSchema, validate} = require('../lib/joi-helper');
+const {buildSchema, validate, Joi} = require('../lib/joi-helper');
 
 const NAME_LENGTH_LIMIT = 200;
-const schema = buildSchema(Joi => ({
-    name: Joi.string().trim().required().min(1).max(NAME_LENGTH_LIMIT)
-}));
+const schema = buildSchema({
+    name: Joi.string().trim().min(1).max(NAME_LENGTH_LIMIT).required()
+});
 
 const post = async ctx => {
     let {album: {name} = {}} = ctx.request.body;
