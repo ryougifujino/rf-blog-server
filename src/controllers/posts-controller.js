@@ -4,6 +4,7 @@ const DateUtils = require('../lib/date-utils');
 const SetUtils = require('../lib/set-utils');
 const md5 = require('md5');
 const AuthManager = require('../lib/auth-manager');
+const {buildSchema, validate, Joi} = require('../lib/joi-helper');
 
 const PREVIEW_LENGTH_LIMIT = 500;
 const TITLE_LENGTH_LIMIT = 200;
@@ -78,56 +79,36 @@ function justifyTagNames(tagNames) {
 
 const post = async ctx => {
     let {post: {title, body = "", is_private, album_id, tag_names} = {}} = ctx.request.body;
-    const titleIsString = typeof title === 'string';
-    const bodyIsString = typeof body === 'string';
-    if (!titleIsString || !bodyIsString) {
-        ctx.status = 400;
-        const errors = [];
-        !titleIsString && errors.push('wrong type of title');
-        !bodyIsString && errors.push('wrong type of body');
-        ctx.body = errors;
+    const schema = buildSchema({
+        title: Joi.string().trim().min(1).max(TITLE_LENGTH_LIMIT).required(),
+        body: Joi.string().required(),
+        is_private: Joi.number().integer().required()
+    });
+    if (!validate(ctx, schema, {title, body, is_private})) {
         return;
     }
     title = title.trim();
-    if (!title || title.length > TITLE_LENGTH_LIMIT) {
-        ctx.status = 400;
-        ctx.body = ['wrong length of title'];
-        return;
-    }
     const albumExisting = await Album.find(album_id);
     const albumId = albumExisting ? albumExisting.id : undefined;
-    try {
-        const post = (await Post.create({
-            title,
-            body,
-            is_private,
-            album_id: albumId,
-            created_on: DateUtils.nowUtcDateTimeString()
-        })).toJson();
-        const tagNames = justifyTagNames(tag_names);
-        post.tags = [];
-        if (tagNames.length > 0) {
-            const tagsOfThePost = await createTagsNotExist(tagNames);
-            const tagIdsToSave = tagsOfThePost.map(tag => tag.id);
-
-            // // get all tags of this post (should be empty, because the post is a new one)
-            // const postTags = await PostTag.where({post_id: post.id}).include('tags');
-            // // filter all existed tag ids to get `tagIdsToSave`
-            // const postTagIds = {};
-            // postTags.forEach(postTag => (postTagIds[postTag.id] = true));
-            // const tagIdsToSave = tag_ids.filter(tag_id => !postTagIds[tag_id]);
-
-            const postTagsToSave = tagIdsToSave.map(tagId => ({post_id: post.id, tag_id: tagId}));
-            await PostTag.create(postTagsToSave);
-            post.tags = tagsOfThePost;
-        }
-        post.body = post.body.substr(0, PREVIEW_LENGTH_LIMIT);
-        ctx.status = 201;
-        ctx.body = post;
-    } catch (e) {
-        ctx.status = 400;
-        ctx.body = e.toString().split('\n');
+    const post = (await Post.create({
+        title,
+        body,
+        is_private,
+        album_id: albumId,
+        created_on: DateUtils.nowUtcDateTimeString()
+    })).toJson();
+    const tagNames = justifyTagNames(tag_names);
+    post.tags = [];
+    if (tagNames.length > 0) {
+        const tagsOfThePost = await createTagsNotExist(tagNames);
+        const tagIdsToSave = tagsOfThePost.map(tag => tag.id);
+        const postTagsToSave = tagIdsToSave.map(tagId => ({post_id: post.id, tag_id: tagId}));
+        await PostTag.create(postTagsToSave);
+        post.tags = tagsOfThePost;
     }
+    post.body = post.body.substr(0, PREVIEW_LENGTH_LIMIT);
+    ctx.status = 201;
+    ctx.body = post;
 };
 
 const patch = async ctx => {
