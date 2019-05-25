@@ -10,10 +10,9 @@ const post = async ctx => {
     let {comment: {content, from_user, post_id} = {}} = ctx.request.body;
     const schema = buildSchema({
         content: Joi.string().trim().min(1).max(CONTENT_LENGTH_LIMIT).required(),
-        from_user: Joi.string().trim().min(1).max(FROM_USER_LENGTH_LIMIT).required(),
-        post_id: Joi.number().integer().required()
+        from_user: Joi.string().trim().min(1).max(FROM_USER_LENGTH_LIMIT).required()
     });
-    if (!validate(ctx, schema, {content, from_user, post_id})) {
+    if (!validate(ctx, schema, {content, from_user})) {
         return;
     }
     content = content.trim();
