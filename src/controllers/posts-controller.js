@@ -128,7 +128,7 @@ const patch = async ctx => {
     if (!validate(ctx, schema, {title, body, is_private})) {
         return;
     }
-    title = title.trim();
+    title = title && title.trim();
     const album = await Album.find(album_id);
     const albumId = album ? album.id : undefined;
     await post.update({
