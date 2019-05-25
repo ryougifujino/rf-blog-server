@@ -113,55 +113,44 @@ const post = async ctx => {
 
 const patch = async ctx => {
     const postId = ctx.params.id;
-    let {post: {title, body, is_private, album_id, tag_names} = {}} = ctx.request.body;
-
-    if (typeof title === 'string') {
-        title = title.trim();
-        if (title.length === 0 || title.length > TITLE_LENGTH_LIMIT) {
-            ctx.status = 400;
-            ctx.body = ['wrong length of title'];
-            return;
-        }
-    } else if (typeof title !== 'undefined') {
-        ctx.status = 400;
-        ctx.body = ['wrong type of title'];
-        return;
-    }
     const post = await Post.find(postId);
     if (!post) {
         ctx.status = 400;
         ctx.body = ["invalid post id"];
         return;
     }
+    let {post: {title, body, is_private, album_id, tag_names} = {}} = ctx.request.body;
+    const schema = buildSchema({
+        title: Joi.string().trim().min(1).max(TITLE_LENGTH_LIMIT),
+        body: Joi.string(),
+        is_private: Joi.number().integer()
+    });
+    if (!validate(ctx, schema, {title, body, is_private})) {
+        return;
+    }
     const album = await Album.find(album_id);
     const albumId = album ? album.id : undefined;
-    try {
-        await post.update({
-            title,
-            body,
-            is_private,
-            album_id: albumId
-        });
-        if (Array.isArray(tag_names)) {
-            const tagNames = justifyTagNames(tag_names);
-            const validTagIds = (await createTagsNotExist(tagNames)).map(tag => tag.id);
-            const tagsOfThePost = await PostTag.where({post_id: postId}).include('tags');
-            const tagIdsOfThePost = tagsOfThePost.map(postTag => postTag.tag_id);
-            const tagToDeleteIds = [...SetUtils.difference(tagIdsOfThePost, validTagIds)];
-            const tagToAddIds = [...SetUtils.difference(validTagIds, tagIdsOfThePost)];
-            tagToDeleteIds.length > 0 && await PostTag.where({
-                post_id: postId,
-                tag_id: tagToDeleteIds
-            }).destroyAll();
-            const tagsToAdd = tagToAddIds.map(id => ({post_id: postId, tag_id: id}));
-            tagsToAdd.length > 0 && await PostTag.create(tagsToAdd);
-        }
-        ctx.status = 204;
-    } catch (e) {
-        console.error(e);
-        ctx.status = 400;
-        ctx.body = e.toString().split('\n');
+    await post.update({
+        title,
+        body,
+        is_private,
+        album_id: albumId
+    });
+    if (Array.isArray(tag_names)) {
+        const tagNames = justifyTagNames(tag_names);
+        const validTagIds = (await createTagsNotExist(tagNames)).map(tag => tag.id);
+        const tagsOfThePost = await PostTag.where({post_id: postId}).include('tags');
+        const tagIdsOfThePost = tagsOfThePost.map(postTag => postTag.tag_id);
+        const tagToDeleteIds = [...SetUtils.difference(tagIdsOfThePost, validTagIds)];
+        const tagToAddIds = [...SetUtils.difference(validTagIds, tagIdsOfThePost)];
+        tagToDeleteIds.length > 0 && await PostTag.where({
+            post_id: postId,
+            tag_id: tagToDeleteIds
+        }).destroyAll();
+        const tagsToAdd = tagToAddIds.map(id => ({post_id: postId, tag_id: id}));
+        tagsToAdd.length > 0 && await PostTag.create(tagsToAdd);
     }
+    ctx.status = 204;
 };
 
 const del = async ctx => {
