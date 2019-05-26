@@ -1,40 +1,30 @@
 const {Tag} = require('../data');
-const {ErrorMessages, Pagination} = require('../data/body-templates');
+const {Pagination} = require('../data/body-templates');
 const DateUtils = require('../lib/date-utils');
+const {buildSchema, validate, Joi} = require('../lib/joi-helper');
 
 const NAME_LENGTH_LIMIT = 20;
 
 const post = async ctx => {
     let {tag: {name} = {}} = ctx.request.body;
-
-    if (typeof name !== 'string') {
-        ctx.status = 400;
-        ctx.body = new ErrorMessages("params error", ['wrong type of name']);
+    const schema = buildSchema({
+        name: Joi.string().trim().min(1).max(NAME_LENGTH_LIMIT).required()
+    });
+    if (!validate(ctx, schema, {name})) {
         return;
     }
     name = name.trim();
-    if (!name || name.length > NAME_LENGTH_LIMIT) {
-        ctx.status = 400;
-        ctx.body = new ErrorMessages("params error", ['wrong length of name']);
-        return;
-    }
-    if ((await Tag.where({name})).length !== 0) {
+    if ((await Tag.where({name})).length) {
         ctx.status = 409;
-        ctx.body = new ErrorMessages("params error", ['name already exists']);
+        ctx.body = ['name already exists'];
         return;
     }
-
-    try {
-        const tag = await Tag.create({
-            name,
-            created_on: DateUtils.nowUtcDateTimeString()
-        });
-        ctx.status = 201;
-        ctx.body = tag;
-    } catch (e) {
-        ctx.status = 400;
-        ctx.body = new ErrorMessages("params error", e.toString().split('\n'));
-    }
+    const tag = await Tag.create({
+        name,
+        created_on: DateUtils.nowUtcDateTimeString()
+    });
+    ctx.status = 201;
+    ctx.body = tag;
 };
 
 const del = async ctx => {
@@ -47,39 +37,26 @@ const del = async ctx => {
 const patch = async ctx => {
     const tagId = ctx.params.id;
     let {tag: {name} = {}} = ctx.request.body;
-
-    if (typeof name !== 'string') {
-        ctx.status = 400;
-        ctx.body = new ErrorMessages("params error", ['wrong type of name']);
+    const schema = buildSchema({
+        name: Joi.string().trim().min(1).max(NAME_LENGTH_LIMIT)
+    });
+    if (!validate(ctx, schema, {name})) {
         return;
     }
-    name = name.trim();
-    if (!name || name.length > NAME_LENGTH_LIMIT) {
-        ctx.status = 400;
-        ctx.body = new ErrorMessages("params error", ['wrong length of name']);
-        return;
-    }
-    if ((await Tag.where({name})).length !== 0) {
-        ctx.status = 409;
-        ctx.body = new ErrorMessages("params error", ['name already exists']);
-        return;
-    }
+    name = name && name.trim();
     const tag = await Tag.find(tagId);
     if (!tag) {
         ctx.status = 400;
-        ctx.body = new ErrorMessages("params error", ["invalid tag id"]);
+        ctx.body = ["invalid tag id"];
         return;
     }
-
-    try {
-        await tag.update({
-            name
-        });
-        ctx.status = 204;
-    } catch (e) {
-        ctx.status = 400;
-        ctx.body = new ErrorMessages("params error", e.toString().split('\n'));
+    if ((await Tag.where({name})).length) {
+        ctx.status = 409;
+        ctx.body = ['name already exists'];
+        return;
     }
+    await tag.update({name});
+    ctx.status = 204;
 };
 
 const get = async ctx => {

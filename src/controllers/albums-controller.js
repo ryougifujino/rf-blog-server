@@ -1,39 +1,30 @@
 const {Album} = require('../data');
-const {ErrorMessages, Pagination} = require('../data/body-templates');
+const {Pagination} = require('../data/body-templates');
 const DateUtils = require('../lib/date-utils');
+const {buildSchema, validate, Joi} = require('../lib/joi-helper');
 
 const NAME_LENGTH_LIMIT = 200;
+const schema = buildSchema({
+    name: Joi.string().trim().min(1).max(NAME_LENGTH_LIMIT).required()
+});
 
 const post = async ctx => {
     let {album: {name} = {}} = ctx.request.body;
-    if (typeof name !== 'string') {
-        ctx.status = 400;
-        ctx.body = new ErrorMessages("params error", ['wrong type of name']);
+    if (!validate(ctx, schema, {name})) {
         return;
     }
     name = name.trim();
-    if (!name || name.length > NAME_LENGTH_LIMIT) {
-        ctx.status = 400;
-        ctx.body = new ErrorMessages("params error", ['wrong length of name']);
-        return;
-    }
-    const albumExisting = await Album.where({name});
-    if (albumExisting.length !== 0) {
+    if ((await Album.where({name})).length) {
         ctx.status = 409;
-        ctx.body = new ErrorMessages("params error", ['name already exists']);
+        ctx.body = ['name already exists'];
         return;
     }
-    try {
-        const album = await Album.create({
-            name,
-            created_on: DateUtils.nowUtcDateTimeString()
-        });
-        ctx.status = 201;
-        ctx.body = album;
-    } catch (e) {
-        ctx.status = 400;
-        ctx.body = new ErrorMessages("params error", e.toString().split('\n'));
-    }
+    const album = await Album.create({
+        name,
+        created_on: DateUtils.nowUtcDateTimeString()
+    });
+    ctx.status = 201;
+    ctx.body = album;
 };
 
 const del = async ctx => {
@@ -46,31 +37,17 @@ const del = async ctx => {
 const patch = async ctx => {
     const albumId = ctx.params.id;
     let {album: {name} = {}} = ctx.request.body;
-    if (typeof name !== 'string') {
-        ctx.status = 400;
-        ctx.body = new ErrorMessages("params error", ['wrong type of name']);
-        return;
-    }
-    name = name.trim();
-    if (!name || name.length > NAME_LENGTH_LIMIT) {
-        ctx.status = 400;
-        ctx.body = new ErrorMessages("params error", ['wrong length of name']);
+    if (!validate(ctx, schema, {name})) {
         return;
     }
     const album = await Album.find(albumId);
     if (!album) {
         ctx.status = 400;
-        ctx.body = new ErrorMessages("params error", ["invalid album id"]);
+        ctx.body = ["invalid album id"];
         return;
     }
-    try {
-        await album.update({name});
-        ctx.status = 204;
-    } catch (e) {
-        console.error(e);
-        ctx.status = 400;
-        ctx.body = new ErrorMessages("params error", e.toString().split('\n'));
-    }
+    await album.update({name});
+    ctx.status = 204;
 };
 
 const get = async ctx => {
