@@ -1,40 +1,30 @@
 const {Tag} = require('../data');
 const {Pagination} = require('../data/body-templates');
 const DateUtils = require('../lib/date-utils');
+const {buildSchema, validate, Joi} = require('../lib/joi-helper');
 
 const NAME_LENGTH_LIMIT = 20;
 
 const post = async ctx => {
     let {tag: {name} = {}} = ctx.request.body;
-
-    if (typeof name !== 'string') {
-        ctx.status = 400;
-        ctx.body = ['wrong type of name'];
+    const schema = buildSchema({
+        name: Joi.string().trim().min(1).max(NAME_LENGTH_LIMIT).required()
+    });
+    if (!validate(ctx, schema, {name})) {
         return;
     }
     name = name.trim();
-    if (!name || name.length > NAME_LENGTH_LIMIT) {
-        ctx.status = 400;
-        ctx.body = ['wrong length of name'];
-        return;
-    }
-    if ((await Tag.where({name})).length !== 0) {
+    if ((await Tag.where({name})).length) {
         ctx.status = 409;
         ctx.body = ['name already exists'];
         return;
     }
-
-    try {
-        const tag = await Tag.create({
-            name,
-            created_on: DateUtils.nowUtcDateTimeString()
-        });
-        ctx.status = 201;
-        ctx.body = tag;
-    } catch (e) {
-        ctx.status = 400;
-        ctx.body = e.toString().split('\n');
-    }
+    const tag = await Tag.create({
+        name,
+        created_on: DateUtils.nowUtcDateTimeString()
+    });
+    ctx.status = 201;
+    ctx.body = tag;
 };
 
 const del = async ctx => {
