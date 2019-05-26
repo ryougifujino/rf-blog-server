@@ -37,19 +37,14 @@ const del = async ctx => {
 const patch = async ctx => {
     const shareCategoryId = ctx.params.id;
     let {share_category: {name} = {}} = ctx.request.body;
-
-    if (typeof name !== 'string') {
-        ctx.status = 400;
-        ctx.body = ['wrong type of name'];
+    const schema = buildSchema({
+        name: Joi.string().trim().min(1).max(NAME_LENGTH_LIMIT)
+    });
+    if (!validate(ctx, schema, {name})) {
         return;
     }
-    name = name.trim();
-    if (!name || name.length > NAME_LENGTH_LIMIT) {
-        ctx.status = 400;
-        ctx.body = ['wrong length of name'];
-        return;
-    }
-    if ((await ShareCategory.where({name})).length !== 0) {
+    name = name && name.trim();
+    if ((await ShareCategory.where({name})).length) {
         ctx.status = 409;
         ctx.body = ['name already exists'];
         return;
@@ -60,15 +55,8 @@ const patch = async ctx => {
         ctx.body = ["invalid share category id"];
         return;
     }
-
-    try {
-        await shareCategory.update({name});
-        ctx.status = 204;
-    } catch (e) {
-        console.error(e);
-        ctx.status = 400;
-        ctx.body = e.toString().split('\n');
-    }
+    await shareCategory.update({name});
+    ctx.status = 204;
 };
 
 const get = async ctx => {
