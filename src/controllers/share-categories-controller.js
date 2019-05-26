@@ -1,40 +1,30 @@
 const {ShareCategory} = require('../data');
 const {Pagination} = require('../data/body-templates');
 const DateUtils = require('../lib/date-utils');
+const {buildSchema, validate, Joi} = require('../lib/joi-helper');
 
 const NAME_LENGTH_LIMIT = 100;
 
 const post = async ctx => {
     let {share_category: {name} = {}} = ctx.request.body;
-
-    if (typeof name !== 'string') {
-        ctx.status = 400;
-        ctx.body = ['wrong type of name'];
+    const schema = buildSchema({
+        name: Joi.string().trim().min(1).max(NAME_LENGTH_LIMIT).required()
+    });
+    if (!validate(ctx, schema, {name})) {
         return;
     }
     name = name.trim();
-    if (!name || name.length > NAME_LENGTH_LIMIT) {
-        ctx.status = 400;
-        ctx.body = ['wrong length of name'];
-        return;
-    }
-    if ((await ShareCategory.where({name})).length !== 0) {
+    if ((await ShareCategory.where({name})).length) {
         ctx.status = 409;
         ctx.body = ['name already exists'];
         return;
     }
-
-    try {
-        const shareCategory = await ShareCategory.create({
-            name,
-            created_on: DateUtils.nowUtcDateTimeString()
-        });
-        ctx.status = 201;
-        ctx.body = shareCategory;
-    } catch (e) {
-        ctx.status = 400;
-        ctx.body = e.toString().split('\n');
-    }
+    const shareCategory = await ShareCategory.create({
+        name,
+        created_on: DateUtils.nowUtcDateTimeString()
+    });
+    ctx.status = 201;
+    ctx.body = shareCategory;
 };
 
 const del = async ctx => {
