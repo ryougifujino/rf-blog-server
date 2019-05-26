@@ -39,18 +39,13 @@ const del = async ctx => {
 const patch = async ctx => {
     const shareId = ctx.params.id;
     let {share: {title, url, share_category_id} = {}} = ctx.request.body;
-
-    if (typeof title !== 'string') {
-        ctx.status = 400;
-        ctx.body = ['wrong type of title'];
+    const schema = buildSchema({
+        title: Joi.string().trim().min(1).max(TITLE_LENGTH_LIMIT)
+    });
+    if (!validate(ctx, schema, {title})) {
         return;
     }
-    title = title.trim();
-    if (!title || title.length > TITLE_LENGTH_LIMIT) {
-        ctx.status = 400;
-        ctx.body = ['wrong length of title'];
-        return;
-    }
+    title = title && title.trim();
     const share = await Share.find(shareId);
     if (!share) {
         ctx.status = 400;
@@ -62,19 +57,12 @@ const patch = async ctx => {
         const shareCategory = await ShareCategory.find(share_category_id);
         shareCategoryId = shareCategory ? share_category_id : undefined;
     }
-    try {
-        await share.update({
-            title,
-            url,
-            share_category_id: shareCategoryId
-        });
-        ctx.status = 204;
-    } catch (e) {
-        console.error(e);
-        ctx.status = 400;
-        ctx.body = e.toString().split('\n');
-    }
-
+    await share.update({
+        title,
+        url,
+        share_category_id: shareCategoryId
+    });
+    ctx.status = 204;
 };
 
 const get = async ctx => {
