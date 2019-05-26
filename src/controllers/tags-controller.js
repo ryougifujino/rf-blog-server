@@ -37,39 +37,26 @@ const del = async ctx => {
 const patch = async ctx => {
     const tagId = ctx.params.id;
     let {tag: {name} = {}} = ctx.request.body;
-
-    if (typeof name !== 'string') {
-        ctx.status = 400;
-        ctx.body = ['wrong type of name'];
+    const schema = buildSchema({
+        name: Joi.string().trim().min(1).max(NAME_LENGTH_LIMIT)
+    });
+    if (!validate(ctx, schema, {name})) {
         return;
     }
-    name = name.trim();
-    if (!name || name.length > NAME_LENGTH_LIMIT) {
-        ctx.status = 400;
-        ctx.body = ['wrong length of name'];
-        return;
-    }
-    if ((await Tag.where({name})).length !== 0) {
-        ctx.status = 409;
-        ctx.body = ['name already exists'];
-        return;
-    }
+    name = name && name.trim();
     const tag = await Tag.find(tagId);
     if (!tag) {
         ctx.status = 400;
         ctx.body = ["invalid tag id"];
         return;
     }
-
-    try {
-        await tag.update({
-            name
-        });
-        ctx.status = 204;
-    } catch (e) {
-        ctx.status = 400;
-        ctx.body = e.toString().split('\n');
+    if ((await Tag.where({name})).length) {
+        ctx.status = 409;
+        ctx.body = ['name already exists'];
+        return;
     }
+    await tag.update({name});
+    ctx.status = 204;
 };
 
 const get = async ctx => {
