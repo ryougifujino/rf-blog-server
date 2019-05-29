@@ -82,7 +82,7 @@ const post = async ctx => {
     const schema = buildSchema({
         title: Joi.string().trim().min(1).max(TITLE_LENGTH_LIMIT).required(),
         body: Joi.string().required(),
-        is_private: Joi.number().integer().required()
+        is_private: Joi.boolean().required()
     });
     if (!validate(ctx, schema, {title, body, is_private})) {
         return;
@@ -123,7 +123,7 @@ const patch = async ctx => {
     const schema = buildSchema({
         title: Joi.string().trim().min(1).max(TITLE_LENGTH_LIMIT),
         body: Joi.string(),
-        is_private: Joi.number().integer()
+        is_private: Joi.boolean()
     });
     if (!validate(ctx, schema, {title, body, is_private})) {
         return;
