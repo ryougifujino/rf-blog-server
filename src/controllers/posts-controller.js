@@ -81,7 +81,7 @@ const post = async ctx => {
     let {post: {title, body = "", is_private, album_id, tag_names} = {}} = ctx.request.body;
     const schema = buildSchema({
         title: Joi.string().trim().min(1).max(TITLE_LENGTH_LIMIT).required(),
-        body: Joi.string().required(),
+        body: Joi.string().allow(''),
         is_private: Joi.boolean().required()
     });
     if (!validate(ctx, schema, {title, body, is_private})) {
@@ -122,7 +122,7 @@ const patch = async ctx => {
     let {post: {title, body, is_private, album_id, tag_names} = {}} = ctx.request.body;
     const schema = buildSchema({
         title: Joi.string().trim().min(1).max(TITLE_LENGTH_LIMIT),
-        body: Joi.string(),
+        body: Joi.string().allow(''),
         is_private: Joi.boolean()
     });
     if (!validate(ctx, schema, {title, body, is_private})) {
