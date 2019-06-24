@@ -46,7 +46,7 @@ const getOne = async ctx => {
         delete post.post_tags;
         post.album = post.album ? post.album : null;
 
-        const etag = md5(JSON.stringify(post));
+        const etag = 'W/' + md5(JSON.stringify(post));
         if (ctx.headers['if-none-match'] === etag) {
             ctx.status = 304;
         } else {
