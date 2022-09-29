@@ -18,7 +18,7 @@
   },
   "homepage": "https://github.com/ryougifujino/rf-blog-server#readme",
   "dependencies": {
-    "@hapi/joi": "^15.0.3",
+    "@hapi/joi": "^15.1.1",
     "koa": "^2.7.0",
     "koa-body": "^4.1.0",
     "koa-router": "^7.4.0",
