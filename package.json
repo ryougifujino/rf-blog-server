@@ -23,7 +23,7 @@
     "koa-body": "^4.1.0",
     "koa-router": "^7.4.0",
     "md5": "^2.2.1",
-    "openrecord": "^2.9.2",
+    "openrecord": "^2.11.1",
     "sqlite3": "^4.0.6"
   }
 }
